@@ -1,4 +1,6 @@
-/* ---------- RESET ---------- */
+/* ========================= */
+/* GLOBAL RESET */
+/* ========================= */
 * {
   box-sizing: border-box;
 }
@@ -14,14 +16,57 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-/* ---------- MAIN APP WRAPPER ---------- */
+/* ========================= */
+/* MAIN CONTAINER */
+/* ========================= */
 .app-container {
   width: 100%;
   max-width: 100%;
   padding: 16px;
 }
 
-/* ---------- CARD ---------- */
+/* ========================= */
+/* HEADER */
+/* ========================= */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+/* ========================= */
+/* DROPDOWN MENU */
+/* ========================= */
+.dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.dropdown a {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.dropdown button {
+  margin-top: 10px;
+}
+
+/* ========================= */
+/* CARD */
+/* ========================= */
 .card {
   width: 100%;
   max-width: 100%;
@@ -31,22 +76,28 @@ html, body, #root {
   margin-bottom: 24px;
 }
 
-/* ---------- NAVIGATION ---------- */
-nav {
+/* ========================= */
+/* HABIT ROW (Checkbox Alignment) */
+/* ========================= */
+.habit-row {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
-nav a {
-  text-decoration: none;
-  color: #38bdf8;
-  font-weight: 600;
-  font-size: 14px;
+.habit-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
 }
 
-/* ---------- INPUTS ---------- */
+.habit-row span {
+  font-size: 15px;
+}
+
+/* ========================= */
+/* INPUTS */
+/* ========================= */
 input,
 select {
   width: 100%;
@@ -57,9 +108,12 @@ select {
   border: 1px solid #334155;
   background: #0f172a;
   color: white;
+  font-size: 14px;
 }
 
-/* ---------- BUTTONS ---------- */
+/* ========================= */
+/* BUTTONS */
+/* ========================= */
 button {
   width: 100%;
   padding: 12px;
@@ -67,6 +121,7 @@ button {
   border: none;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   margin-top: 10px;
 }
 
@@ -79,4 +134,18 @@ button.secondary {
   background: transparent;
   border: 1px solid #38bdf8;
   color: #38bdf8;
+}
+
+/* ========================= */
+/* LINKS */
+/* ========================= */
+a {
+  color: #38bdf8;
+}
+
+/* ========================= */
+/* SCROLL BEHAVIOR */
+/* ========================= */
+body {
+  overscroll-behavior-y: contain;
 }

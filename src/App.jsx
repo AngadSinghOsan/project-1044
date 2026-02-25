@@ -16,6 +16,7 @@ import "./App.css";
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -29,24 +30,39 @@ export default function App() {
   }, []);
 
   if (loading) return <div>Loading...</div>;
-
-  if (!session) {
-    return <Auth />;
-  }
+  if (!session) return <Auth />;
 
   return (
     <BrowserRouter>
       <div className="app-container">
 
-        <nav>
-          <Link to="/">Dashboard</Link>
-          <Link to="/weekly">Weekly</Link>
-          <Link to="/competition">Competition</Link>
-          <Link to="/summary">Summary</Link>
-          <Link to="/analytics">Analytics</Link>
-          <Link to="/charts">Charts</Link>
-          <Link to="/journal">Journal</Link>
-        </nav>
+        {/* Header */}
+        <div className="header">
+          <h3>Project 1044</h3>
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            ☰
+          </button>
+        </div>
+
+        {/* Dropdown Menu */}
+        {menuOpen && (
+          <div className="dropdown">
+            <Link to="/" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+            <Link to="/weekly" onClick={() => setMenuOpen(false)}>Weekly</Link>
+            <Link to="/competition" onClick={() => setMenuOpen(false)}>Competition</Link>
+            <Link to="/summary" onClick={() => setMenuOpen(false)}>Summary</Link>
+            <Link to="/analytics" onClick={() => setMenuOpen(false)}>Analytics</Link>
+            <Link to="/charts" onClick={() => setMenuOpen(false)}>Charts</Link>
+            <Link to="/journal" onClick={() => setMenuOpen(false)}>Journal</Link>
+
+            <button
+              className="secondary"
+              onClick={() => supabase.auth.signOut()}
+            >
+              Logout
+            </button>
+          </div>
+        )}
 
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -57,13 +73,6 @@ export default function App() {
           <Route path="/charts" element={<Charts />} />
           <Route path="/journal" element={<Journal />} />
         </Routes>
-
-        <button
-          className="secondary"
-          onClick={() => supabase.auth.signOut()}
-        >
-          Logout
-        </button>
 
       </div>
     </BrowserRouter>

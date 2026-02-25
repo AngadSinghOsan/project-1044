@@ -7,7 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      injectRegister: 'auto',
+      workbox: {
+        clientsClaim: true,
+        skipWaiting: true
+      },
       manifest: {
         name: 'Project 1044',
         short_name: '1044',
@@ -15,9 +19,8 @@ export default defineConfig({
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
         start_url: '/',
+        scope: '/',
         icons: [
           {
             src: '/vite.svg',

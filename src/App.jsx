@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
 import Weekly from "./pages/Weekly";
@@ -23,15 +23,9 @@ export default function App() {
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -42,33 +36,34 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div style={{ padding: "20px", width: "100%", maxWidth: "100%"}}>
+      <div className="app-container">
 
-        <nav style={{ display: "flex", gap: "25px", marginBottom: "30px" }}>
-          <a href="/">Dashboard</a>
-          <a href="/weekly">Weekly</a>
-          <a href="/competition">Competition</a>
-          <a href="/summary">Summary</a>
-          <a href="/analytics">Analytics</a>
-          <a href="/charts">Charts</a>
-
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{ marginLeft: "auto" }}
-          >
-            Logout
-          </button>
+        <nav>
+          <Link to="/">Dashboard</Link>
+          <Link to="/weekly">Weekly</Link>
+          <Link to="/competition">Competition</Link>
+          <Link to="/summary">Summary</Link>
+          <Link to="/analytics">Analytics</Link>
+          <Link to="/charts">Charts</Link>
+          <Link to="/journal">Journal</Link>
         </nav>
 
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/weekly" element={<Weekly />} />
+          <Route path="/competition" element={<Competition />} />
           <Route path="/summary" element={<Summary />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/charts" element={<Charts />} />
           <Route path="/journal" element={<Journal />} />
-          <Route path="/competition" element={<Competition />} />
-          <Route path="/analytics" element={<Analytics />} />
         </Routes>
+
+        <button
+          className="secondary"
+          onClick={() => supabase.auth.signOut()}
+        >
+          Logout
+        </button>
 
       </div>
     </BrowserRouter>

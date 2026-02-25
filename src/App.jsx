@@ -42,7 +42,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div style={{ padding: "40px", maxWidth: "1100px", margin: "0 auto" }}>
+      <div style={{ padding: "20px", width: "100%", maxWidth: "100%"}}>
 
         <nav style={{ display: "flex", gap: "25px", marginBottom: "30px" }}>
           <a href="/">Dashboard</a>

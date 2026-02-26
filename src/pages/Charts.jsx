@@ -25,7 +25,7 @@ export default function Charts() {
 
   useEffect(() => {
     const loadCharts = async () => {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await user.id;
       if (!userData.user) return;
 
       const userId = userData.user.id;

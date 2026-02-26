@@ -21,7 +21,7 @@ function MedalStyle(position) {
   return { background: "#1e293b", color: "white" };
 }
 
-export default function Competition() {
+export default function Competition({ user }) {
   const [data, setData] = useState([]);
   const [champion, setChampion] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -35,7 +35,7 @@ export default function Competition() {
   }, [weekStart]);
 
   const fetchAll = async () => {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await user.id;
     if (!userData.user) return;
 
     setCurrentUser(userData.user.id);

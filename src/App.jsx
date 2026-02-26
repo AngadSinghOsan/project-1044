@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "./supabase";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
@@ -7,44 +6,42 @@ import Weekly from "./pages/Weekly";
 import Summary from "./pages/Summary";
 import Charts from "./pages/Charts";
 import Journal from "./pages/Journal";
-import Auth from "./pages/Auth";
 import Competition from "./pages/Competition";
 import Analytics from "./pages/Analytics";
+import Auth from "./pages/Auth";
 
 import "./App.css";
 
 export default function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const stored = localStorage.getItem("activeUser");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (!session) return <Auth />;
+  if (!user) return <Auth />;
+
+  const logout = () => {
+    localStorage.removeItem("activeUser");
+    window.location.reload();
+  };
 
   return (
     <BrowserRouter>
       <div className="app-container">
 
-        {/* Header */}
         <div className="header">
           <h3>Project 1044</h3>
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            ☰
-          </button>
+          <small style={{ color: "#38bdf8" }}>
+    Logged in as: {user.username}
+  </small>
+          <button onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         </div>
 
-        {/* Dropdown Menu */}
         {menuOpen && (
           <div className="dropdown">
             <Link to="/" onClick={() => setMenuOpen(false)}>Dashboard</Link>
@@ -55,23 +52,20 @@ export default function App() {
             <Link to="/charts" onClick={() => setMenuOpen(false)}>Charts</Link>
             <Link to="/journal" onClick={() => setMenuOpen(false)}>Journal</Link>
 
-            <button
-              className="secondary"
-              onClick={() => supabase.auth.signOut()}
-            >
+            <button className="secondary" onClick={logout}>
               Logout
             </button>
           </div>
         )}
 
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/weekly" element={<Weekly />} />
-          <Route path="/competition" element={<Competition />} />
-          <Route path="/summary" element={<Summary />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/charts" element={<Charts />} />
-          <Route path="/journal" element={<Journal />} />
+          <Route path="/" element={<Dashboard user={user} />} />
+          <Route path="/weekly" element={<Weekly user={user} />} />
+          <Route path="/competition" element={<Competition user={user} />} />
+          <Route path="/summary" element={<Summary user={user} />} />
+          <Route path="/analytics" element={<Analytics user={user} />} />
+          <Route path="/charts" element={<Charts user={user} />} />
+          <Route path="/journal" element={<Journal user={user} />} />
         </Routes>
 
       </div>

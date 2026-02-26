@@ -33,7 +33,7 @@ export default function Analytics() {
   }, []);
 
   const loadAnalytics = async () => {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await user.id;
     if (!userData.user) return;
 
     const userId = userData.user.id;

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
-const TOTAL_HABITS = 10;
-
 export default function Dashboard({ user }) {
   const todayStr = new Date().toISOString().split("T")[0];
 

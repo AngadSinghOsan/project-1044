@@ -14,7 +14,7 @@ html, body, #root {
   background: #0f172a;
   color: #e5e7eb;
   overflow-x: hidden;
-  overflow-y: auto; /* <-- IMPORTANT */
+  overflow-y: auto;
 }
 
 /* ========================= */
@@ -23,9 +23,7 @@ html, body, #root {
 .app-container {
   width: 100%;
   min-height: 100vh;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+  padding: 20px;
 }
 
 /* ========================= */
@@ -35,12 +33,13 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 /* ========================= */
@@ -49,11 +48,12 @@ html, body, #root {
 .dropdown {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   background: #1e293b;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
 .dropdown a {
@@ -69,9 +69,25 @@ html, body, #root {
 .card {
   width: 100%;
   background: #1e293b;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 24px;
+  padding: 24px;
+  border-radius: 18px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* ========================= */
+/* TITLES */
+/* ========================= */
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 /* ========================= */
@@ -81,7 +97,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .habit-row input[type="checkbox"] {
@@ -89,16 +105,21 @@ html, body, #root {
   height: 18px;
 }
 
+.habit-row span {
+  font-size: 15px;
+}
+
 /* ========================= */
 /* INPUTS */
 /* ========================= */
 input,
-select {
+select,
+textarea {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
-  margin-bottom: 14px;
-  border-radius: 8px;
+  margin-bottom: 16px;
+  border-radius: 10px;
   border: 1px solid #334155;
   background: #0f172a;
   color: white;
@@ -110,13 +131,14 @@ select {
 /* ========================= */
 button {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  margin-top: 10px;
+  margin-top: 12px;
+  transition: all 0.2s ease;
 }
 
 button.primary {
@@ -124,8 +146,30 @@ button.primary {
   color: black;
 }
 
+button.primary:hover {
+  opacity: 0.9;
+}
+
 button.secondary {
   background: transparent;
   border: 1px solid #38bdf8;
   color: #38bdf8;
+}
+
+/* ========================= */
+/* PROGRESS BAR */
+/* ========================= */
+.progress-container {
+  background: #0f172a;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 10px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #38bdf8;
+  transition: width 0.4s ease;
 }

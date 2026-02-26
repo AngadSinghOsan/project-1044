@@ -193,6 +193,9 @@ export default function Analytics() {
           <Line type="linear" dataKey="savings" stroke="#22c55e" />
         </LineChart>
       </ResponsiveContainer>
+      <small style={{ opacity: 0.6 }}>
+      Version 1.0 • March 2026
+    </small>
     </div>
   );
 }

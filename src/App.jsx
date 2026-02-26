@@ -36,6 +36,7 @@ export default function App() {
 
         <div className="header">
           <h3>Project 1044</h3>
+        
           <small style={{ color: "#38bdf8" }}>
     Logged in as: {user.username}
   </small>

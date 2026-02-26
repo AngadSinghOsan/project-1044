@@ -135,6 +135,9 @@ export default function Dashboard({ user }) {
       >
         {saving ? "Saving..." : "Save Day"}
       </button>
+      <small style={{ opacity: 0.6 }}>
+      Version 1.0 • March 2026
+    </small>
     </div>
   );
 }

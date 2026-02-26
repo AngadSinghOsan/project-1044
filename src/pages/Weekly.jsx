@@ -97,6 +97,9 @@ export default function Weekly({ user }) {
       <button className="primary" onClick={handleSave} disabled={savingState}>
         {savingState ? "Saving..." : "Save Weekly"}
       </button>
+      <small style={{ opacity: 0.6 }}>
+      Version 1.0 • March 2026
+    </small>
     </div>
   );
 }

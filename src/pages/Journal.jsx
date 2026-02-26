@@ -56,6 +56,9 @@ export default function Journal({ user }) {
       <button className="primary" onClick={saveEntry}>
         Save Journal
       </button>
+      <small style={{ opacity: 0.6 }}>
+      Version 1.0 • March 2026
+    </small>
     </div>
   );
 }

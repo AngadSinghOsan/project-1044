@@ -149,8 +149,11 @@ export default function Competition({ user }) {
     { key: "benchRatio", label: "🟧 Bench" },
     { key: "squatRatio", label: "🟩 Squat" },
     { key: "deadliftRatio", label: "🟥 Deadlift" }
+    
   ];
-
+<small style={{ opacity: 0.6 }}>
+      Version 1.0 • March 2026
+    </small>
   return (
     <div className="card">
       <h2>🏆 Weekly Competition</h2>

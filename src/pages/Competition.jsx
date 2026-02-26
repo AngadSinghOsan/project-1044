@@ -44,7 +44,7 @@ export default function Competition({ user }) {
       .from("profiles")
       .select("role")
       .eq("id", userData.user.id)
-      .single();
+      .maybeSingle();;
 
     if (profile?.role === "admin") setIsAdmin(true);
 
@@ -52,7 +52,7 @@ export default function Competition({ user }) {
       .from("locked_weeks")
       .select("*")
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle();;
 
     setIsLocked(!!lock);
 
@@ -151,9 +151,7 @@ export default function Competition({ user }) {
     { key: "deadliftRatio", label: "🟥 Deadlift" }
     
   ];
-<small style={{ opacity: 0.6 }}>
-      Version 1.0 • March 2026
-    </small>
+
   return (
     <div className="card">
       <h2>🏆 Weekly Competition</h2>

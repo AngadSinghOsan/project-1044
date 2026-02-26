@@ -43,7 +43,7 @@ export default function Dashboard({ user }) {
       .select("*")
       .eq("user_id", user.id)
       .eq("entry_date", selectedDate)
-      .single();
+      .maybeSingle();;
 
     if (data) {
       setHabits(data.habits || habits);

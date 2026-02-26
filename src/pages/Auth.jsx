@@ -16,7 +16,7 @@ export default function Auth() {
       .select("*")
       .eq("username", username.toLowerCase())
       .eq("pin", pin)
-      .single();
+     .maybeSingle();;
 
     if (error || !data) {
       alert("Invalid credentials");

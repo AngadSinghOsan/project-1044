@@ -32,7 +32,7 @@ export default function Weekly({ user }) {
       .select("*")
       .eq("user_id", user.id)
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle();;
 
     if (data) {
       setWeight(data.weight || "");

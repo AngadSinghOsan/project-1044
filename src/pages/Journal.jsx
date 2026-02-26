@@ -17,7 +17,7 @@ export default function Journal({ user }) {
       .select("*")
       .eq("user_id", user.id)
       .eq("entry_date", selectedDate)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setEntry(data.content || "");

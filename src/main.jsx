@@ -2,7 +2,18 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./ErrorBoundary";
+import { registerSW } from "virtual:pwa-register";
 import "./App.css";
+
+// Register PWA
+registerSW({
+  onNeedRefresh() {
+    console.log("New version available");
+  },
+  onOfflineReady() {
+    console.log("App ready for offline use");
+  }
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -1,74 +1,54 @@
-import fetch from "node-fetch";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
+);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { table, method, filters, payload } = req.body;
-
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
-
-  const headers = {
-    apikey: SERVICE_ROLE,
-    Authorization: `Bearer ${SERVICE_ROLE}`,
-    "Content-Type": "application/json",
-  };
+  const { table, action, payload, filters } = req.body;
 
   try {
-    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    let query = supabase.from(table);
 
-    if (method === "select" && filters) {
-      const query = filters
-        .map(f => `${f.column}=eq.${f.value}`)
-        .join("&");
-
-      url += `?${query}`;
+    if (action === "select") {
+      query = query.select("*");
+      if (filters) {
+        filters.forEach(f => {
+          query = query.eq(f.column, f.value);
+        });
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return res.status(200).json(data);
     }
 
-    let response;
-
-    if (method === "select") {
-      response = await fetch(url, {
-        method: "GET",
-        headers
-      });
+    if (action === "insert") {
+      const { data, error } = await query.insert(payload).select();
+      if (error) throw error;
+      return res.status(200).json(data);
     }
 
-    if (method === "insert") {
-      response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload)
-      });
+    if (action === "update") {
+      const { data, error } = await query
+        .update(payload.data)
+        .match(payload.match)
+        .select();
+      if (error) throw error;
+      return res.status(200).json(data);
     }
 
-    if (method === "update") {
-      const match = payload.match;
-      const updateUrl = `${url}?${Object.entries(match)
-        .map(([k, v]) => `${k}=eq.${v}`)
-        .join("&")}`;
-
-      response = await fetch(updateUrl, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify(payload.data)
-      });
+    if (action === "delete") {
+      const { error } = await query.match(payload).delete();
+      if (error) throw error;
+      return res.status(200).json({ success: true });
     }
 
-    if (method === "delete") {
-      const deleteUrl = `${url}?id=eq.${payload.id}`;
-
-      response = await fetch(deleteUrl, {
-        method: "DELETE",
-        headers
-      });
-    }
-
-    const data = await response.json();
-
-    return res.status(200).json(data);
+    return res.status(400).json({ error: "Invalid action" });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });

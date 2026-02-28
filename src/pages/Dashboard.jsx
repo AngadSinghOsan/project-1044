@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase";
+import { dbRequest } from "../supabase";
 
 export default function Dashboard({ user }) {
   const today = new Date().toISOString().split("T")[0];

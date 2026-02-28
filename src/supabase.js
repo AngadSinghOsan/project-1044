@@ -1,6 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
+export async function dbRequest(body) {
+  const res = await fetch("/api/db", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const data = await res.json();
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  if (!res.ok) {
+    throw new Error(data.message || "API Error");
+  }
+
+  return data;
+}

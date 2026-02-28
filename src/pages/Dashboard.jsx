@@ -4,138 +4,120 @@ import { dbRequest } from "../supabase";
 export default function Dashboard({ user }) {
   const today = new Date().toISOString().split("T")[0];
 
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [saving, setSaving] = useState(false);
-
-  const habitLabels = {
-    wake_up_on_time: "Wake Up On Time",
-    no_junk_food: "No Junk Food",
-    screen_control: "Screen Control",
-    learning_30_min: "30 Min Learning",
-    gym_done: "Gym Completed",
-    calorie_target_hit: "Calorie Target Hit",
-    protein_target_hit: "Protein Target Hit",
-    business_work_done: "Business Work Done",
-    content_posted: "Content Posted",
-    new_skill_learning: "New Skill Practice"
-  };
-
-  const [habits, setHabits] = useState(
-    Object.keys(habitLabels).reduce((acc, key) => {
-      acc[key] = false;
-      return acc;
-    }, {})
-  );
+  const [habits, setHabits] = useState({
+    wake_up: false,
+    no_junk: false,
+    screen_control: false,
+    learning_30: false,
+    gym: false,
+    calorie_target: false,
+    protein_target: false,
+    business_work: false,
+    content_posted: false
+  });
 
   const [steps, setSteps] = useState(0);
   const [moneyWasted, setMoneyWasted] = useState(0);
 
   useEffect(() => {
-    loadDay();
-  }, [selectedDate]);
+    loadToday();
+  }, []);
 
-  const loadDay = async () => {
-    const { data } = await supabase
-      .from("daily_entries")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("entry_date", selectedDate)
-      .maybeSingle();
+  async function loadToday() {
+    try {
+      const data = await dbRequest({
+        table: "daily_entries",
+        method: "select",
+        filters: [
+          { column: "user_id", value: user.id },
+          { column: "entry_date", value: today }
+        ]
+      });
 
-    if (data) {
-      setHabits({ ...habits, ...(data.habits || {}) });
-      setSteps(data.steps || 0);
-      setMoneyWasted(data.money_wasted || 0);
+      if (data.length > 0) {
+        setHabits(data[0].habits || habits);
+        setSteps(data[0].steps || 0);
+        setMoneyWasted(data[0].money_wasted || 0);
+      }
+    } catch (err) {
+      console.error("Load error:", err.message);
     }
-  };
+  }
 
-  const toggleHabit = (key) => {
-    setHabits((prev) => ({
+  async function saveDay() {
+    try {
+      await dbRequest({
+        table: "daily_entries",
+        method: "insert",
+        payload: {
+          user_id: user.id,
+          entry_date: today,
+          habits,
+          steps: Number(steps),
+          money_wasted: Number(moneyWasted)
+        }
+      });
+
+      alert("Day Saved");
+    } catch (err) {
+      console.error(err.message);
+      alert("Error saving day");
+    }
+  }
+
+  function toggleHabit(key) {
+    setHabits(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
-  };
-
-  const saveDay = async () => {
-    setSaving(true);
-
-    const { error } = await supabase
-      .from("daily_entries")
-      .upsert(
-        {
-          user_id: user.id,
-          entry_date: selectedDate,
-          habits,
-          steps,
-          money_wasted: moneyWasted
-        },
-        { onConflict: "user_id,entry_date" }
-      );
-
-    setSaving(false);
-
-    if (error) alert(error.message);
-    else alert("Day Saved");
-  };
-
-  const stepOptions = [];
-  for (let i = 0; i <= 20000; i += 500) {
-    stepOptions.push(i);
   }
 
   return (
     <div className="card">
       <h2>Daily Dashboard</h2>
 
-      <label>Select Date</label>
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={(e) => setSelectedDate(e.target.value)}
-      />
-
-      <div style={{ marginTop: "20px" }}>
-        {Object.keys(habitLabels).map((key) => (
-          <div
-            key={key}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              alignItems: "center",
-              padding: "8px 0",
-              borderBottom: "1px solid #2a3445"
-            }}
-          >
-            <span>{habitLabels[key]}</span>
+      <div className="habit-list">
+        {Object.keys(habits).map(key => (
+          <div className="habit-row" key={key}>
+            <label>{key.replace("_", " ").toUpperCase()}</label>
             <input
               type="checkbox"
               checked={habits[key]}
               onChange={() => toggleHabit(key)}
-              style={{ width: "18px", height: "18px" }}
             />
           </div>
         ))}
       </div>
 
-      <label style={{ marginTop: "20px" }}>Steps</label>
-      <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
-        {stepOptions.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+      <div style={{ marginTop: 20 }}>
+        <label>Steps</label>
+        <input
+          type="number"
+          value={steps}
+          onChange={(e) => setSteps(e.target.value)}
+        />
+      </div>
 
-      <label>Money Wasted (₹)</label>
-      <input
-        type="number"
-        value={moneyWasted}
-        onChange={(e) => setMoneyWasted(Number(e.target.value))}
-      />
+      <div style={{ marginTop: 20 }}>
+        <label>Money Wasted</label>
+        <input
+          type="number"
+          value={moneyWasted}
+          onChange={(e) => setMoneyWasted(e.target.value)}
+        />
+      </div>
 
-      <button className="primary" onClick={saveDay} disabled={saving}>
-        {saving ? "Saving..." : "Save Day"}
+      <button
+        className="primary"
+        style={{ marginTop: 20 }}
+        onClick={saveDay}
+      >
+        Save Day
       </button>
+
+      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
+        Version 1.0.1
+      </div>
     </div>
   );
 }

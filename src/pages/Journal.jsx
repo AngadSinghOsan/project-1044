@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase";
+import { dbRequest } from "../supabase";
 
 export default function Journal({ user }) {
   const today = new Date().toISOString().split("T")[0];
@@ -13,87 +13,100 @@ export default function Journal({ user }) {
     loadEntries();
   }, []);
 
-  // ---------- LOAD GOALS ----------
-  const loadGoals = async () => {
-    const { data } = await supabase
-      .from("user_goals")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+  async function loadGoals() {
+    try {
+      const data = await dbRequest({
+        table: "user_goals",
+        method: "select",
+        filters: [{ column: "user_id", value: user.id }]
+      });
 
-    if (data?.goals) {
-      setGoals(data.goals);
+      if (data.length > 0) {
+        setGoals(data[0].goals || "");
+      }
+    } catch (err) {
+      console.error(err.message);
     }
-  };
-
-  // ---------- SAVE GOALS ----------
-  const saveGoals = async () => {
-    await supabase.from("user_goals").upsert({
-      user_id: user.id,
-      goals,
-      updated_at: new Date()
-    });
-
-    alert("Goals Saved");
-  };
-
-  const loadEntries = async () => {
-  const { data, error } = await supabase
-    .from("journal_entries")
-    .select("*")
-    .eq("user_id", user.id);
-
-  if (error) {
-    console.log("Load error:", error);
-  } else {
-    setEntries(data || []);
-  }
-};
-
-const postEntry = async () => {
-  if (!entry.trim()) return;
-
-  const { data, error } = await supabase
-    .from("journal_entries")
-    .insert({
-      user_id: user.id,
-      entry_date: today,
-      content: entry
-    })
-    .select();
-
-  if (error) {
-    console.log("FULL INSERT ERROR:", error);
-    alert(error.message);
-    return;
   }
 
-  console.log("Inserted:", data);
+  async function saveGoals() {
+    try {
+      await dbRequest({
+        table: "user_goals",
+        method: "insert",
+        payload: {
+          user_id: user.id,
+          goals,
+          updated_at: new Date()
+        }
+      });
 
-  setEntry("");
-  await loadEntries();
-};
+      alert("Goals Saved");
+    } catch (err) {
+      console.error(err.message);
+      alert("Error saving goals");
+    }
+  }
 
-  // ---------- DELETE ENTRY ----------
-  const deleteEntry = async (id) => {
-    await supabase
-      .from("journal_entries")
-      .delete()
-      .eq("id", id);
+  async function loadEntries() {
+    try {
+      const data = await dbRequest({
+        table: "journal_entries",
+        method: "select",
+        filters: [{ column: "user_id", value: user.id }]
+      });
 
-    loadEntries();
-  };
+      setEntries(data);
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+
+  async function postEntry() {
+    if (!entry.trim()) return;
+
+    try {
+      await dbRequest({
+        table: "journal_entries",
+        method: "insert",
+        payload: {
+          user_id: user.id,
+          entry_date: today,
+          content: entry
+        }
+      });
+
+      setEntry("");
+      loadEntries();
+    } catch (err) {
+      console.error(err.message);
+      alert("Error posting journal");
+    }
+  }
+
+  async function deleteEntry(id) {
+    try {
+      await dbRequest({
+        table: "journal_entries",
+        method: "delete",
+        payload: { id }
+      });
+
+      loadEntries();
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
 
   return (
     <div className="card">
       <h2>Journal</h2>
 
-      {/* GOALS SECTION */}
       <h3>My Goals</h3>
       <textarea
         value={goals}
         onChange={(e) => setGoals(e.target.value)}
-        placeholder="Write your main goals here..."
+        placeholder="Write your main goals..."
       />
       <button className="primary" onClick={saveGoals}>
         Save Goals
@@ -101,12 +114,11 @@ const postEntry = async () => {
 
       <hr style={{ margin: "25px 0", borderColor: "#334155" }} />
 
-      {/* NEW ENTRY */}
-      <h3>New Journal Entry</h3>
+      <h3>New Entry</h3>
       <textarea
         value={entry}
         onChange={(e) => setEntry(e.target.value)}
-        placeholder="Write today's reflection..."
+        placeholder="Write today's journal..."
       />
       <button className="primary" onClick={postEntry}>
         Post Entry
@@ -114,10 +126,7 @@ const postEntry = async () => {
 
       <hr style={{ margin: "25px 0", borderColor: "#334155" }} />
 
-      {/* PAST ENTRIES */}
       <h3>Past Entries</h3>
-
-      {entries.length === 0 && <p>No entries yet.</p>}
 
       {entries.map((e) => (
         <div
@@ -133,13 +142,16 @@ const postEntry = async () => {
 
           <button
             className="secondary"
-            style={{ marginTop: "10px" }}
             onClick={() => deleteEntry(e.id)}
           >
             Delete
           </button>
         </div>
       ))}
+
+      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
+        Version 1.0.1
+      </div>
     </div>
   );
 }

@@ -60,22 +60,19 @@ export default function Weekly({ user }) {
     }
 
     try {
-      await dbRequest({
-        table: "weekly_entries",
-        method: "insert",
-        payload: {
-          user_id: user.id,
-          week_start: weekStart,
-          weight: weight ? Number(weight) : null,
-          savings: savings ? Number(savings) : null,
-          bench: bench ? Number(bench) : null,
-          squat: squat ? Number(squat) : null,
-          deadlift: deadlift ? Number(deadlift) : null,
-          run_time: runTime || null,
-          new_skill: newSkill,
-          locked: false
-        }
-      });
+      await supabase
+  .from("weekly_entries")
+  .upsert({
+    user_id: user.id,
+    week_start: weekString,
+    weight,
+    savings,
+    bench,
+    squat,
+    deadlift,
+    run_time,
+    new_skill
+  }, { onConflict: "user_id,week_start" });
 
       alert("Weekly data saved");
     } catch (err) {

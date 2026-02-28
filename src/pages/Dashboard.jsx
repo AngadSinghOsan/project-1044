@@ -46,24 +46,24 @@ export default function Dashboard({ user }) {
     }
   }
 
-  async function saveDay() {
-    try {
-      await dbRequest({
-        table: "daily_entries",
-        action: "insert",   // ✅ FIXED
-        payload: {
-          user_id: user.id,
-          entry_date: selectedDate,
-          habits
-        }
-      });
+ async function saveDay() {
+  const { error } = await supabase
+    .from("daily_entries")
+    .upsert({
+      user_id: user.id,
+      entry_date: selectedDate,
+      habits,
+      money_wasted: 0,
+      steps: 0,
+      completed: true
+    }, { onConflict: "user_id,entry_date" });
 
-      alert("Day Saved");
-    } catch (err) {
-      console.error(err.message);
-      alert("Error saving day");
-    }
+  if (error) {
+    alert("Error saving day");
+  } else {
+    alert("Saved");
   }
+}
 
   function toggleHabit(key) {
     setHabits({ ...habits, [key]: !habits[key] });

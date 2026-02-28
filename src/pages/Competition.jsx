@@ -1,82 +1,69 @@
 import { useEffect, useState } from "react";
-import { dbRequest } from "../supabase";
-
-function getStartOfWeek(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
-}
-
-export default function Competition({ user }) {
-  const weekStart = getStartOfWeek(new Date())
-    .toISOString()
-    .split("T")[0];
-
+import { supabase } from "../supabase";
+export default function Competition() {
   const [results, setResults] = useState([]);
-  const [users, setUsers] = useState([]);
 
+ async function loadCompetition(weekStart) {
+  const { data, error } = await supabase
+    .from("competition_results")
+    .select("*")
+    .eq("week_start", weekStart);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setResults(data);
+}
   useEffect(() => {
-    loadData();
+    loadResults();
   }, []);
 
-  async function loadData() {
-    try {
-      const usersData = await dbRequest({
-        table: "app_users",
-        method: "select"
-      });
-
-      const resultsData = await dbRequest({
-        table: "competition_results",
-        method: "select",
-        filters: [{ column: "week_start", value: weekStart }]
-      });
-
-      setUsers(usersData);
-      setResults(resultsData);
-
-    } catch (err) {
-      console.error(err.message);
-    }
-  }
-
-  function getMedal(category, position) {
-    const winner = results.find(
-      r => r.category === category && r.position === position
-    );
-
-    if (!winner) return "No Winner";
-
-    const user = users.find(u => u.id === winner.user_id);
-    return user ? user.username : "No Winner";
-  }
-
-  function CategoryBlock({ title, category }) {
-    return (
-      <div style={{ marginBottom: 30 }}>
-        <h3>{title}</h3>
-        <div>🥇 Gold: {getMedal(category, "gold")}</div>
-        <div>🥈 Silver: {getMedal(category, "silver")}</div>
-        <div>🥉 Bronze: {getMedal(category, "bronze")}</div>
-        <hr />
-      </div>
-    );
-  }
+  const categories = [
+    "gym_sessions",
+    "steps",
+    "bench",
+    "squat",
+    "deadlift"
+  ];
 
   return (
     <div className="card">
       <h2>Weekly Competition</h2>
 
-      <CategoryBlock title="Gym Sessions" category="gym" />
-      <CategoryBlock title="Total Steps" category="steps" />
-      <CategoryBlock title="Bench Press" category="bench" />
-      <CategoryBlock title="Squat" category="squat" />
-      <CategoryBlock title="Deadlift" category="deadlift" />
+      {categories.map((category) => {
+        const categoryResults = results.filter(
+          (r) => r.category === category
+        );
 
-      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
-        Version 1.0.1
-      </div>
+        return (
+          <div
+            key={category}
+            style={{
+              borderTop: "1px solid #2a2d36",
+              paddingTop: "15px",
+              marginTop: "15px"
+            }}
+          >
+            <h3 style={{ textTransform: "capitalize" }}>
+              {category.replace("_", " ")}
+            </h3>
+
+            {categoryResults.length === 0 ? (
+              <p>No winners yet.</p>
+            ) : (
+              categoryResults.map((r, i) => (
+                <div key={i}>
+                  🥇 Gold: {r.gold || "None"} <br />
+                  🥈 Silver: {r.silver || "None"} <br />
+                  🥉 Bronze: {r.bronze || "None"}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

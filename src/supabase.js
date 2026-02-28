@@ -9,10 +9,11 @@ export async function dbRequest({ table, action, payload = null, filters = null 
 
   const text = await res.text();
 
+  console.log("API RAW RESPONSE:", text);
+
   try {
     return JSON.parse(text);
   } catch {
-    console.error("RAW RESPONSE:", text);
     throw new Error(text);
   }
 }

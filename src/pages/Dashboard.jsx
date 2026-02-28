@@ -6,7 +6,7 @@ export default function Dashboard({ user }) {
 
   const [selectedDate, setSelectedDate] = useState(today);
 
-  const [habits, setHabits] = useState({
+  const emptyHabits = {
     wake_up: false,
     no_junk: false,
     screen_control: false,
@@ -17,7 +17,9 @@ export default function Dashboard({ user }) {
     protein_target: false,
     business_work: false,
     content_posted: false,
-  });
+  };
+
+  const [habits, setHabits] = useState(emptyHabits);
 
   useEffect(() => {
     loadDay();
@@ -27,28 +29,17 @@ export default function Dashboard({ user }) {
     try {
       const data = await dbRequest({
         table: "daily_entries",
-        method: "select",
+        action: "select",   // ✅ FIXED
         filters: [
           { column: "user_id", value: user.id },
           { column: "entry_date", value: selectedDate }
         ]
       });
 
-      if (data.length > 0) {
-        setHabits(data[0].habits || habits);
+      if (data && data.length > 0) {
+        setHabits(data[0].habits || emptyHabits);
       } else {
-        setHabits({
-          wake_up: false,
-          no_junk: false,
-          screen_control: false,
-          learning_30: false,
-          gym: false,
-          steps_10k: false,
-          calorie_target: false,
-          protein_target: false,
-          business_work: false,
-          content_posted: false,
-        });
+        setHabits(emptyHabits);
       }
     } catch (err) {
       console.error(err.message);
@@ -59,7 +50,7 @@ export default function Dashboard({ user }) {
     try {
       await dbRequest({
         table: "daily_entries",
-        method: "insert",
+        action: "insert",   // ✅ FIXED
         payload: {
           user_id: user.id,
           entry_date: selectedDate,
@@ -106,7 +97,6 @@ export default function Dashboard({ user }) {
       <hr />
 
       <h3>Discipline Habits</h3>
-
       <HabitRow label="Wake Up On Time" keyName="wake_up" />
       <HabitRow label="No Junk Food" keyName="no_junk" />
       <HabitRow label="Screen Control" keyName="screen_control" />
@@ -115,7 +105,6 @@ export default function Dashboard({ user }) {
       <hr />
 
       <h3>Fitness</h3>
-
       <HabitRow label="Gym Session Completed" keyName="gym" />
       <HabitRow label="10,000 Steps Completed" keyName="steps_10k" />
       <HabitRow label="Calorie Target Achieved" keyName="calorie_target" />
@@ -124,7 +113,6 @@ export default function Dashboard({ user }) {
       <hr />
 
       <h3>Growth</h3>
-
       <HabitRow label="Business Work Done" keyName="business_work" />
       <HabitRow label="Content Posted" keyName="content_posted" />
 

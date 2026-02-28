@@ -4,43 +4,54 @@ import { dbRequest } from "../supabase";
 export default function Dashboard({ user }) {
   const today = new Date().toISOString().split("T")[0];
 
+  const [selectedDate, setSelectedDate] = useState(today);
+
   const [habits, setHabits] = useState({
     wake_up: false,
     no_junk: false,
     screen_control: false,
     learning_30: false,
     gym: false,
+    steps_10k: false,
     calorie_target: false,
     protein_target: false,
     business_work: false,
-    content_posted: false
+    content_posted: false,
   });
 
-  const [steps, setSteps] = useState(0);
-  const [moneyWasted, setMoneyWasted] = useState(0);
-
   useEffect(() => {
-    loadToday();
-  }, []);
+    loadDay();
+  }, [selectedDate]);
 
-  async function loadToday() {
+  async function loadDay() {
     try {
       const data = await dbRequest({
         table: "daily_entries",
         method: "select",
         filters: [
           { column: "user_id", value: user.id },
-          { column: "entry_date", value: today }
+          { column: "entry_date", value: selectedDate }
         ]
       });
 
       if (data.length > 0) {
         setHabits(data[0].habits || habits);
-        setSteps(data[0].steps || 0);
-        setMoneyWasted(data[0].money_wasted || 0);
+      } else {
+        setHabits({
+          wake_up: false,
+          no_junk: false,
+          screen_control: false,
+          learning_30: false,
+          gym: false,
+          steps_10k: false,
+          calorie_target: false,
+          protein_target: false,
+          business_work: false,
+          content_posted: false,
+        });
       }
     } catch (err) {
-      console.error("Load error:", err.message);
+      console.error(err.message);
     }
   }
 
@@ -51,10 +62,8 @@ export default function Dashboard({ user }) {
         method: "insert",
         payload: {
           user_id: user.id,
-          entry_date: today,
-          habits,
-          steps: Number(steps),
-          money_wasted: Number(moneyWasted)
+          entry_date: selectedDate,
+          habits
         }
       });
 
@@ -66,58 +75,67 @@ export default function Dashboard({ user }) {
   }
 
   function toggleHabit(key) {
-    setHabits(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setHabits({ ...habits, [key]: !habits[key] });
+  }
+
+  function HabitRow({ label, keyName }) {
+    return (
+      <div className="habit-row">
+        <span>{label}</span>
+        <input
+          type="checkbox"
+          checked={habits[keyName]}
+          onChange={() => toggleHabit(keyName)}
+        />
+      </div>
+    );
   }
 
   return (
     <div className="card">
+
       <h2>Daily Dashboard</h2>
 
-      <div className="habit-list">
-        {Object.keys(habits).map(key => (
-          <div className="habit-row" key={key}>
-            <label>{key.replace("_", " ").toUpperCase()}</label>
-            <input
-              type="checkbox"
-              checked={habits[key]}
-              onChange={() => toggleHabit(key)}
-            />
-          </div>
-        ))}
-      </div>
+      <label>Select Date</label>
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+      />
 
-      <div style={{ marginTop: 20 }}>
-        <label>Steps</label>
-        <input
-          type="number"
-          value={steps}
-          onChange={(e) => setSteps(e.target.value)}
-        />
-      </div>
+      <hr />
 
-      <div style={{ marginTop: 20 }}>
-        <label>Money Wasted</label>
-        <input
-          type="number"
-          value={moneyWasted}
-          onChange={(e) => setMoneyWasted(e.target.value)}
-        />
-      </div>
+      <h3>Discipline Habits</h3>
 
-      <button
-        className="primary"
-        style={{ marginTop: 20 }}
-        onClick={saveDay}
-      >
+      <HabitRow label="Wake Up On Time" keyName="wake_up" />
+      <HabitRow label="No Junk Food" keyName="no_junk" />
+      <HabitRow label="Screen Control" keyName="screen_control" />
+      <HabitRow label="30 Minutes Learning" keyName="learning_30" />
+
+      <hr />
+
+      <h3>Fitness</h3>
+
+      <HabitRow label="Gym Session Completed" keyName="gym" />
+      <HabitRow label="10,000 Steps Completed" keyName="steps_10k" />
+      <HabitRow label="Calorie Target Achieved" keyName="calorie_target" />
+      <HabitRow label="Protein Target Achieved" keyName="protein_target" />
+
+      <hr />
+
+      <h3>Growth</h3>
+
+      <HabitRow label="Business Work Done" keyName="business_work" />
+      <HabitRow label="Content Posted" keyName="content_posted" />
+
+      <button className="primary" onClick={saveDay}>
         Save Day
       </button>
 
       <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
         Version 1.0.1
       </div>
+
     </div>
   );
 }

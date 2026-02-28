@@ -1,78 +1,99 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase";
+import { dbRequest } from "../supabase";
 
 export default function Summary({ user }) {
   const [dailyData, setDailyData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
-  const [medals, setMedals] = useState([]);
+  const [competitionData, setCompetitionData] = useState([]);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    const { data: daily } = await supabase
-      .from("daily_entries")
-      .select("*")
-      .eq("user_id", user.id);
+  async function loadData() {
+    try {
+      const daily = await dbRequest({
+        table: "daily_entries",
+        method: "select",
+        filters: [{ column: "user_id", value: user.id }]
+      });
 
-    const { data: weekly } = await supabase
-      .from("weekly_entries")
-      .select("*")
-      .eq("user_id", user.id);
+      const weekly = await dbRequest({
+        table: "weekly_entries",
+        method: "select",
+        filters: [{ column: "user_id", value: user.id }]
+      });
 
-    const { data: medalData } = await supabase
-      .from("competition_results")
-      .select("*")
-      .eq("user_id", user.id);
+      const comp = await dbRequest({
+        table: "competition_results",
+        method: "select",
+        filters: [{ column: "user_id", value: user.id }]
+      });
 
-    setDailyData(daily || []);
-    setWeeklyData(weekly || []);
-    setMedals(medalData || []);
-  };
+      setDailyData(daily);
+      setWeeklyData(weekly);
+      setCompetitionData(comp);
 
-  const totalMoneyWasted = dailyData.reduce(
-    (sum, d) => sum + (d.money_wasted || 0),
-    0
-  );
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+
+  // ---- Calculations ----
+  const totalDays = dailyData.length;
+
+  const totalGym = dailyData.filter(d => d.habits?.gym).length;
 
   const totalMoneySaved = weeklyData.reduce(
     (sum, w) => sum + (w.savings || 0),
     0
   );
 
-  const totalGymSessions = dailyData.filter(
-    d => d.habits?.gym_done
-  ).length;
+  const totalMoneyWasted = dailyData.reduce(
+    (sum, d) => sum + (d.money_wasted || 0),
+    0
+  );
 
   const totalSteps = dailyData.reduce(
     (sum, d) => sum + (d.steps || 0),
     0
   );
 
-  const avgSteps =
-    dailyData.length > 0
-      ? Math.round(totalSteps / dailyData.length)
-      : 0;
+  const averageSteps = totalDays
+    ? Math.round(totalSteps / totalDays)
+    : 0;
 
-  const medalCount = (type) =>
-    medals.filter(m => m.position === type).length;
+  const gold = competitionData.filter(c => c.position === "gold").length;
+  const silver = competitionData.filter(c => c.position === "silver").length;
+  const bronze = competitionData.filter(c => c.position === "bronze").length;
 
   return (
     <div className="card">
       <h2>Summary</h2>
 
-      <p><strong>Total Money Saved:</strong> ₹{totalMoneySaved}</p>
-      <p><strong>Total Money Wasted:</strong> ₹{totalMoneyWasted}</p>
-      <p><strong>Total Gym Sessions:</strong> {totalGymSessions}</p>
-      <p><strong>Average Steps:</strong> {avgSteps}</p>
+      <hr />
+
+      <h3>Performance Overview</h3>
+      <div>Total Days Logged: {totalDays}</div>
+      <div>Total Gym Sessions: {totalGym}</div>
+      <div>Average Steps: {averageSteps}</div>
 
       <hr />
 
-      <h3>Medals</h3>
-      <p>🥇 Gold: {medalCount("gold")}</p>
-      <p>🥈 Silver: {medalCount("silver")}</p>
-      <p>🥉 Bronze: {medalCount("bronze")}</p>
+      <h3>Finance Overview</h3>
+      <div>Total Money Saved: ₹{totalMoneySaved}</div>
+      <div>Total Money Wasted: ₹{totalMoneyWasted}</div>
+
+      <hr />
+
+      <h3>Competition Medals</h3>
+      <div>🥇 Gold: {gold}</div>
+      <div>🥈 Silver: {silver}</div>
+      <div>🥉 Bronze: {bronze}</div>
+
+      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
+        Version 1.0.1
+      </div>
     </div>
   );
 }

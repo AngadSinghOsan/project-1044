@@ -66,21 +66,21 @@ export default function Weekly({ user }) {
         payload: {
           user_id: user.id,
           week_start: weekStart,
-          weight: Number(weight),
-          savings: Number(savings),
-          bench: Number(bench),
-          squat: Number(squat),
-          deadlift: Number(deadlift),
-          run_time: runTime,
+          weight: weight ? Number(weight) : null,
+          savings: savings ? Number(savings) : null,
+          bench: bench ? Number(bench) : null,
+          squat: squat ? Number(squat) : null,
+          deadlift: deadlift ? Number(deadlift) : null,
+          run_time: runTime || null,
           new_skill: newSkill,
           locked: false
         }
       });
 
-      alert("Week Saved");
+      alert("Weekly data saved");
     } catch (err) {
-      alert("Error saving weekly data");
       console.error(err.message);
+      alert("Error saving weekly data");
     }
   }
 
@@ -101,60 +101,60 @@ export default function Weekly({ user }) {
       });
 
       setLocked(true);
-      alert("Week Locked");
+      alert("Week locked");
     } catch (err) {
       console.error(err.message);
     }
   }
 
+  function CheckboxRow({ label, checked, onChange }) {
+    return (
+      <div className="habit-row">
+        <span>{label}</span>
+        <input type="checkbox" checked={checked} onChange={onChange} />
+      </div>
+    );
+  }
+
   return (
     <div className="card">
-      <h2>Weekly Entry</h2>
+      <h2>Weekly Progress</h2>
 
-      <input
-        placeholder="Weight"
-        value={weight}
-        onChange={(e) => setWeight(e.target.value)}
+      <hr />
+
+      <h3>Body & Finance</h3>
+
+      <label>Weight (kg)</label>
+      <input value={weight} onChange={(e) => setWeight(e.target.value)} />
+
+      <label>Money Saved This Week</label>
+      <input value={savings} onChange={(e) => setSavings(e.target.value)} />
+
+      <hr />
+
+      <h3>Strength PR</h3>
+
+      <label>Bench Press (kg)</label>
+      <input value={bench} onChange={(e) => setBench(e.target.value)} />
+
+      <label>Squat (kg)</label>
+      <input value={squat} onChange={(e) => setSquat(e.target.value)} />
+
+      <label>Deadlift (kg)</label>
+      <input value={deadlift} onChange={(e) => setDeadlift(e.target.value)} />
+
+      <label>1KM Run Time (minutes)</label>
+      <input value={runTime} onChange={(e) => setRunTime(e.target.value)} />
+
+      <hr />
+
+      <h3>Growth</h3>
+
+      <CheckboxRow
+        label="New Skill Learned"
+        checked={newSkill}
+        onChange={() => setNewSkill(!newSkill)}
       />
-
-      <input
-        placeholder="Savings"
-        value={savings}
-        onChange={(e) => setSavings(e.target.value)}
-      />
-
-      <input
-        placeholder="Bench"
-        value={bench}
-        onChange={(e) => setBench(e.target.value)}
-      />
-
-      <input
-        placeholder="Squat"
-        value={squat}
-        onChange={(e) => setSquat(e.target.value)}
-      />
-
-      <input
-        placeholder="Deadlift"
-        value={deadlift}
-        onChange={(e) => setDeadlift(e.target.value)}
-      />
-
-      <input
-        placeholder="1KM Run Time"
-        value={runTime}
-        onChange={(e) => setRunTime(e.target.value)}
-      />
-
-      <label>
-        <input
-          type="checkbox"
-          checked={newSkill}
-          onChange={() => setNewSkill(!newSkill)}
-        />
-        New Skill Learned
-      </label>
 
       <button className="primary" onClick={saveWeek}>
         Save Week

@@ -2,20 +2,21 @@ import { useEffect, useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Weekly from "./pages/Weekly";
 import Competition from "./pages/Competition";
-import Journal from "./pages/Journal";
+import Summary from "./pages/Summary";
 import Analytics from "./pages/Analytics";
+import Charts from "./pages/Charts";
+import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
 import "./App.css";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [page, setPage] = useState("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("activeUser");
-    if (saved) {
-      setUser(JSON.parse(saved));
-    }
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
   function logout() {
@@ -23,48 +24,62 @@ export default function App() {
     setUser(null);
   }
 
-  if (!user) {
-    return <Auth setUser={setUser} />;
-  }
+  if (!user) return <Auth setUser={setUser} />;
 
   return (
     <div className="app-container">
-      
-      {/* Top Bar */}
+
+      {/* TOP BAR */}
       <div className="topbar">
+
+        {/* LEFT */}
         <div className="top-left">
-          <span className="logo-text">Project 1044</span>
+          <img src="/vite.svg" alt="logo" className="logo" />
+          <span className="app-title">Project 1044</span>
         </div>
 
+        {/* CENTER */}
         <div className="top-center">
-          <select
-            value={page}
-            onChange={(e) => setPage(e.target.value)}
+          <button
+            className="burger"
+            onClick={() => setMenuOpen(!menuOpen)}
           >
-            <option value="dashboard">Dashboard</option>
-            <option value="weekly">Weekly</option>
-            <option value="competition">Competition</option>
-            <option value="journal">Journal</option>
-            <option value="analytics">Analytics</option>
-          </select>
+            ☰
+          </button>
+
+          {menuOpen && (
+            <div className="dropdown">
+              <div onClick={() => { setPage("dashboard"); setMenuOpen(false); }}>Dashboard</div>
+              <div onClick={() => { setPage("weekly"); setMenuOpen(false); }}>Weekly</div>
+              <div onClick={() => { setPage("competition"); setMenuOpen(false); }}>Competition</div>
+              <div onClick={() => { setPage("summary"); setMenuOpen(false); }}>Summary</div>
+              <div onClick={() => { setPage("analytics"); setMenuOpen(false); }}>Analytics</div>
+              <div onClick={() => { setPage("charts"); setMenuOpen(false); }}>Charts</div>
+              <div onClick={() => { setPage("journal"); setMenuOpen(false); }}>Journal</div>
+              <hr />
+              <div onClick={logout}>Logout</div>
+            </div>
+          )}
         </div>
 
+        {/* RIGHT */}
         <div className="top-right">
-          Logged in as: {user.username}
-          <button className="secondary small" onClick={logout}>
-            Logout
-          </button>
+          Logged in as: <strong>{user.username}</strong>
         </div>
+
       </div>
 
-      {/* Page Render */}
+      {/* PAGE CONTENT */}
       <div className="page-content">
         {page === "dashboard" && <Dashboard user={user} />}
         {page === "weekly" && <Weekly user={user} />}
         {page === "competition" && <Competition user={user} />}
-        {page === "journal" && <Journal user={user} />}
+        {page === "summary" && <Summary user={user} />}
         {page === "analytics" && <Analytics user={user} />}
+        {page === "charts" && <Charts user={user} />}
+        {page === "journal" && <Journal user={user} />}
       </div>
+
     </div>
   );
 }

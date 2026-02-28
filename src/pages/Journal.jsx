@@ -102,6 +102,7 @@ export default function Journal({ user }) {
     <div className="card">
       <h2>Journal</h2>
 
+      {/* GOALS SECTION */}
       <h3>My Goals</h3>
       <textarea
         value={goals}
@@ -112,9 +113,10 @@ export default function Journal({ user }) {
         Save Goals
       </button>
 
-      <hr style={{ margin: "25px 0", borderColor: "#334155" }} />
+      <hr />
 
-      <h3>New Entry</h3>
+      {/* NEW ENTRY */}
+      <h3>New Journal Entry</h3>
       <textarea
         value={entry}
         onChange={(e) => setEntry(e.target.value)}
@@ -124,9 +126,12 @@ export default function Journal({ user }) {
         Post Entry
       </button>
 
-      <hr style={{ margin: "25px 0", borderColor: "#334155" }} />
+      <hr />
 
+      {/* PAST ENTRIES */}
       <h3>Past Entries</h3>
+
+      {entries.length === 0 && <div>No entries yet.</div>}
 
       {entries.map((e) => (
         <div

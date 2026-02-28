@@ -7,8 +7,6 @@ body {
 
 .app-container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 .topbar {
@@ -18,69 +16,122 @@ body {
   background-color: #1e293b;
   padding: 15px 20px;
   border-bottom: 1px solid #334155;
+  position: relative;
+  z-index: 10000;
 }
 
 .top-left {
-  font-weight: bold;
-  font-size: 18px;
-}
-
-.top-center select {
-  background: #0f172a;
-  color: white;
-  border: 1px solid #334155;
-  padding: 6px 10px;
-}
-
-.top-right {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.logo {
+  width: 30px;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.top-center {
+  position: relative;
+}
+
+.burger {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 10px;
+  border-radius: 8px;
+  min-width: 180px;
+  z-index: 9999;              /* 🔥 CRITICAL */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.dropdown div {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown div:hover {
+  background: #334155;
+}
+
+.top-right {
   font-size: 14px;
 }
 
 .page-content {
   padding: 20px;
-  flex: 1;
 }
 
 .card {
   background-color: #1e293b;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
+  margin-bottom: 20px;
 }
 
 input, textarea {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 8px;
   padding: 8px;
   background-color: #0f172a;
   color: white;
   border: 1px solid #334155;
+  border-radius: 6px;
 }
 
 textarea {
   min-height: 100px;
 }
 
-button {
-  margin-top: 15px;
+button.primary {
+  background-color: #2563eb;
+  color: white;
   padding: 8px 14px;
   border: none;
+  border-radius: 6px;
+  margin-top: 12px;
   cursor: pointer;
 }
 
-.primary {
-  background-color: #2563eb;
-  color: white;
-}
-
-.secondary {
+button.secondary {
   background-color: #475569;
   color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 12px;
+  cursor: pointer;
 }
 
-.small {
-  padding: 4px 8px;
-  font-size: 12px;
+.habit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.habit-row span {
+  flex: 1;
+}
+
+.habit-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
 }

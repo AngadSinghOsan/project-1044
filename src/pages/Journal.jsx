@@ -1,156 +1,69 @@
 import { useEffect, useState } from "react";
-import { dbRequest } from "../supabase";
+import { supabase } from "../supabase";
 
 export default function Journal({ user }) {
-  const today = new Date().toISOString().split("T")[0];
-
-  const [goals, setGoals] = useState("");
+  const [goal, setGoal] = useState("");
   const [entry, setEntry] = useState("");
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
-    loadGoals();
     loadEntries();
   }, []);
 
-  async function loadGoals() {
-    try {
-      const data = await dbRequest({
-        table: "user_goals",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
-
-      if (data.length > 0) {
-        setGoals(data[0].goals || "");
-      }
-    } catch (err) {
-      console.error(err.message);
-    }
-  }
-
-  async function saveGoals() {
-    try {
-      await dbRequest({
-        table: "user_goals",
-        method: "insert",
-        payload: {
-          user_id: user.id,
-          goals,
-          updated_at: new Date()
-        }
-      });
-
-      alert("Goals Saved");
-    } catch (err) {
-      console.error(err.message);
-      alert("Error saving goals");
-    }
-  }
-
   async function loadEntries() {
-    try {
-      const data = await dbRequest({
-        table: "journal_entries",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+    const { data } = await supabase
+      .from("journal_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-      setEntries(data);
-    } catch (err) {
-      console.error(err.message);
-    }
+    setEntries(data || []);
+  }
+
+  async function saveGoal() {
+    await supabase
+      .from("user_goals")
+      .upsert({ user_id: user.id, goal }, { onConflict: "user_id" });
+
+    alert("Goal Saved");
   }
 
   async function postEntry() {
-    if (!entry.trim()) return;
+    await supabase.from("journal_entries").insert({
+      user_id: user.id,
+      content: entry
+    });
 
-    try {
-      await dbRequest({
-        table: "journal_entries",
-        method: "insert",
-        payload: {
-          user_id: user.id,
-          entry_date: today,
-          content: entry
-        }
-      });
-
-      setEntry("");
-      loadEntries();
-    } catch (err) {
-      console.error(err.message);
-      alert("Error posting journal");
-    }
-  }
-
-  async function deleteEntry(id) {
-    try {
-      await dbRequest({
-        table: "journal_entries",
-        method: "delete",
-        payload: { id }
-      });
-
-      loadEntries();
-    } catch (err) {
-      console.error(err.message);
-    }
+    setEntry("");
+    loadEntries();
   }
 
   return (
     <div className="card">
       <h2>Journal</h2>
 
-      {/* GOALS SECTION */}
-      <h3>My Goals</h3>
       <textarea
-        value={goals}
-        onChange={(e) => setGoals(e.target.value)}
-        placeholder="Write your main goals..."
+        placeholder="Your Goal"
+        value={goal}
+        onChange={(e)=>setGoal(e.target.value)}
       />
-      <button className="primary" onClick={saveGoals}>
-        Save Goals
-      </button>
+      <button onClick={saveGoal}>Save Goal</button>
 
       <hr />
 
-      {/* NEW ENTRY */}
-      <h3>New Journal Entry</h3>
       <textarea
-        value={entry}
-        onChange={(e) => setEntry(e.target.value)}
         placeholder="Write today's journal..."
+        value={entry}
+        onChange={(e)=>setEntry(e.target.value)}
       />
-      <button className="primary" onClick={postEntry}>
-        Post Entry
-      </button>
+      <button onClick={postEntry}>Post</button>
 
       <hr />
 
-      {/* PAST ENTRIES */}
-      <h3>Past Entries</h3>
-
-      {entries.length === 0 && <div>No entries yet.</div>}
-
-      {entries.map((e) => (
-        <div
-          key={e.id}
-          style={{
-            marginBottom: "20px",
-            paddingBottom: "15px",
-            borderBottom: "1px solid #334155"
-          }}
-        >
-          <strong>{e.entry_date}</strong>
+      {entries.map((e,i)=>(
+        <div key={i}>
           <p>{e.content}</p>
-
-          <button
-            className="secondary"
-            onClick={() => deleteEntry(e.id)}
-          >
-            Delete
-          </button>
+          <hr />
         </div>
       ))}
 

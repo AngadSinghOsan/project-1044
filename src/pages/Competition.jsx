@@ -1,69 +1,40 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
+
 export default function Competition() {
   const [results, setResults] = useState([]);
 
- async function loadCompetition(weekStart) {
-  const { data, error } = await supabase
-    .from("competition_results")
-    .select("*")
-    .eq("week_start", weekStart);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  setResults(data);
-}
   useEffect(() => {
     loadResults();
   }, []);
 
-  const categories = [
-    "gym_sessions",
-    "steps",
-    "bench",
-    "squat",
-    "deadlift"
-  ];
+  async function loadResults() {
+    const { data } = await supabase
+      .from("competition_results")
+      .select("*")
+      .order("week_start", { ascending: false });
+
+    setResults(data || []);
+  }
 
   return (
     <div className="card">
-      <h2>Weekly Competition</h2>
+      <h2>Competition Results</h2>
 
-      {categories.map((category) => {
-        const categoryResults = results.filter(
-          (r) => r.category === category
-        );
+      {results.map((r, i) => (
+        <div key={i}>
+          <p>Week: {r.week_start}</p>
+          <p>Category: {r.category}</p>
+          <p>Gold: {r.gold || "None"}</p>
+          <p>Silver: {r.silver || "None"}</p>
+          <p>Bronze: {r.bronze || "None"}</p>
+          <hr />
+        </div>
+      ))}
 
-        return (
-          <div
-            key={category}
-            style={{
-              borderTop: "1px solid #2a2d36",
-              paddingTop: "15px",
-              marginTop: "15px"
-            }}
-          >
-            <h3 style={{ textTransform: "capitalize" }}>
-              {category.replace("_", " ")}
-            </h3>
-
-            {categoryResults.length === 0 ? (
-              <p>No winners yet.</p>
-            ) : (
-              categoryResults.map((r, i) => (
-                <div key={i}>
-                  🥇 Gold: {r.gold || "None"} <br />
-                  🥈 Silver: {r.silver || "None"} <br />
-                  🥉 Bronze: {r.bronze || "None"}
-                </div>
-              ))
-            )}
-          </div>
-        );
-      })}
+      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
+        Version 1.0.1
+      </div>
     </div>
   );
 }

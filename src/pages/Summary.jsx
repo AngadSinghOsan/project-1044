@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { dbRequest } from "../supabase";
+import { supabase } from "../supabase";
 
 export default function Summary({ user }) {
   const [dailyData, setDailyData] = useState([]);

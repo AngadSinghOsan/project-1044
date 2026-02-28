@@ -1,17 +1,18 @@
-export async function dbRequest(body) {
+export async function dbRequest({ table, action, payload = null, filters = null }) {
   const res = await fetch("/api/db", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ table, action, payload, filters })
   });
 
-  const data = await res.json();
+  const text = await res.text();
 
-  if (!res.ok) {
-    throw new Error(data.message || "API Error");
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error("RAW RESPONSE:", text);
+    throw new Error(text);
   }
-
-  return data;
 }

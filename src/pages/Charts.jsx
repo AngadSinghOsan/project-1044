@@ -7,185 +7,99 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  Legend,
-  LabelList
+  Legend
 } from "recharts";
 
-function getStartOfWeek(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
-}
-
-export default function Charts() {
+export default function Charts({ user }) {
   const [weeklyData, setWeeklyData] = useState([]);
-  const [wastedData, setWastedData] = useState([]);
-  const [stepsData, setStepsData] = useState([]);
+  const [dailyData, setDailyData] = useState([]);
 
   useEffect(() => {
-    const loadCharts = async () => {
-      const { data: userData } = await user.id;
-      if (!userData.user) return;
-
-      const userId = userData.user.id;
-
-      // -------- WEEKLY ENTRIES --------
-      const { data: weekly } = await supabase
-        .from("weekly_entries")
-        .select("*")
-        .eq("user_id", userId)
-        .order("week_start", { ascending: true });
-
-      if (weekly) {
-        const formatted = weekly.map(w => ({
-          week: w.week_start,
-          weight: w.weight || 0,
-          savings: w.savings || 0,
-          bench: w.bench || 0,
-          squat: w.squat || 0,
-          deadlift: w.deadlift || 0
-        }));
-
-        setWeeklyData(formatted);
-      }
-
-      // -------- DAILY ENTRIES --------
-      const { data: daily } = await supabase
-        .from("daily_entries")
-        .select("*")
-        .eq("user_id", userId)
-        .order("entry_date", { ascending: true });
-
-      if (!daily) return;
-
-      const wasteMap = {};
-      const stepsMap = {};
-
-      daily.forEach(entry => {
-        const weekStart = getStartOfWeek(
-          new Date(entry.entry_date)
-        )
-          .toISOString()
-          .split("T")[0];
-
-        if (!wasteMap[weekStart]) wasteMap[weekStart] = 0;
-        if (!stepsMap[weekStart]) stepsMap[weekStart] = 0;
-
-        wasteMap[weekStart] += entry.money_wasted || 0;
-        stepsMap[weekStart] += entry.habits?.Steps || 0;
-      });
-
-      const wasteArray = Object.entries(wasteMap)
-        .map(([week, amount]) => ({
-          week,
-          wasted: amount
-        }))
-        .sort((a, b) => new Date(a.week) - new Date(b.week));
-
-      const stepsArray = Object.entries(stepsMap)
-        .map(([week, total]) => ({
-          week,
-          steps: total
-        }))
-        .sort((a, b) => new Date(a.week) - new Date(b.week));
-
-      setWastedData(wasteArray);
-      setStepsData(stepsArray);
-    };
-
-    loadCharts();
+    loadData();
   }, []);
 
-  const commonLineProps = {
-    type: "linear",
-    dot: { r: 4 },
-    activeDot: false,
-    isAnimationActive: false,
-    strokeWidth: 3
+  const loadData = async () => {
+    const { data: weekly } = await supabase
+      .from("weekly_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("week_start", { ascending: true });
+
+    const { data: daily } = await supabase
+      .from("daily_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("entry_date", { ascending: true });
+
+    setWeeklyData(weekly || []);
+    setDailyData(daily || []);
   };
 
+  const wastedByWeek = {};
+
+  dailyData.forEach((d) => {
+    const date = new Date(d.entry_date);
+    const weekStart = new Date(date);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    weekStart.setDate(diff);
+    const key = weekStart.toISOString().split("T")[0];
+
+    if (!wastedByWeek[key]) wastedByWeek[key] = 0;
+    wastedByWeek[key] += d.money_wasted || 0;
+  });
+
+  const wastedArray = Object.keys(wastedByWeek).map((k) => ({
+    week: k,
+    wasted: wastedByWeek[k]
+  }));
+
   return (
-    <div>
+    <div className="card">
+      <h2>Charts</h2>
 
-      {/* Weight */}
-      <div className="card">
-        <h2>⚖️ Weight Progress</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={weeklyData} cursor={false}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis />
-            <Line {...commonLineProps} dataKey="weight">
-              <LabelList dataKey="weight" position="top" />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <h3>Weight Progress</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={weeklyData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="week_start" />
+          <YAxis />
+          <Line type="monotone" dataKey="weight" stroke="#38bdf8" />
+        </LineChart>
+      </ResponsiveContainer>
 
-      {/* Savings */}
-      <div className="card">
-        <h2>💰 Savings Growth</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={weeklyData} cursor={false}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis />
-            <Line {...commonLineProps} dataKey="savings">
-              <LabelList dataKey="savings" position="top" />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <h3>Savings Growth</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={weeklyData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="week_start" />
+          <YAxis />
+          <Line type="monotone" dataKey="savings" stroke="#22c55e" />
+        </LineChart>
+      </ResponsiveContainer>
 
-      {/* Strength */}
-      <div className="card">
-        <h2>🏋️ Strength Progress</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={weeklyData} cursor={false}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis />
-            <Legend />
-            <Line {...commonLineProps} dataKey="deadlift" />
-            <Line {...commonLineProps} dataKey="squat" />
-            <Line {...commonLineProps} dataKey="bench" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <h3>Strength Progress</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={weeklyData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="week_start" />
+          <YAxis />
+          <Legend />
+          <Line type="monotone" dataKey="bench" stroke="#f97316" />
+          <Line type="monotone" dataKey="squat" stroke="#eab308" />
+          <Line type="monotone" dataKey="deadlift" stroke="#ef4444" />
+        </LineChart>
+      </ResponsiveContainer>
 
-      {/* Steps */}
-      <div className="card">
-        <h2>👣 Weekly Steps</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={stepsData} cursor={false}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis />
-            <Line {...commonLineProps} dataKey="steps">
-              <LabelList dataKey="steps" position="top" />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Money Wasted */}
-      <div className="card">
-        <h2>💸 Money Wasted Per Week</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={wastedData} cursor={false}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis />
-            <Line {...commonLineProps} dataKey="wasted">
-              <LabelList dataKey="wasted" position="top" />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-<small style={{ opacity: 0.6 }}>
-      Version 1.0 • March 2026
-    </small>
+      <h3>Money Wasted</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={wastedArray}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="week" />
+          <YAxis />
+          <Line type="monotone" dataKey="wasted" stroke="#ef4444" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }

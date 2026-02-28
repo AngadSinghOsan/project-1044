@@ -2,61 +2,61 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function Dashboard({ user }) {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
-  const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [habits, setHabits] = useState({
-    wakeUp: false,
-    noJunk: false,
-    screenControl: false,
-    learning: false,
-    gym: false,
-    calorieTarget: false,
-    proteinTarget: false,
-    businessWork: false,
-    contentPosted: false
-  });
-
-  const [steps, setSteps] = useState(0);
-  const [moneyWasted, setMoneyWasted] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(today);
   const [saving, setSaving] = useState(false);
 
   const habitLabels = {
-    wakeUp: "Wake Up On Time",
-    noJunk: "No Junk Food",
-    screenControl: "Screen Control",
-    learning: "30 Min Learning",
-    gym: "Gym",
-    calorieTarget: "Calorie Target Hit",
-    proteinTarget: "Protein Target Hit",
-    businessWork: "Business Work Done",
-    contentPosted: "Content Posted"
+    wake_up_on_time: "Wake Up On Time",
+    no_junk_food: "No Junk Food",
+    screen_control: "Screen Control",
+    learning_30_min: "30 Min Learning",
+    gym_done: "Gym Completed",
+    calorie_target_hit: "Calorie Target Hit",
+    protein_target_hit: "Protein Target Hit",
+    business_work_done: "Business Work Done",
+    content_posted: "Content Posted",
+    new_skill_learning: "New Skill Practice"
   };
+
+  const [habits, setHabits] = useState(
+    Object.keys(habitLabels).reduce((acc, key) => {
+      acc[key] = false;
+      return acc;
+    }, {})
+  );
+
+  const [steps, setSteps] = useState(0);
+  const [moneyWasted, setMoneyWasted] = useState(0);
 
   useEffect(() => {
     loadDay();
   }, [selectedDate]);
 
   const loadDay = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("daily_entries")
       .select("*")
       .eq("user_id", user.id)
       .eq("entry_date", selectedDate)
-      .maybeSingle();;
+      .maybeSingle();
 
     if (data) {
-      setHabits(data.habits || habits);
+      setHabits({ ...habits, ...(data.habits || {}) });
       setSteps(data.steps || 0);
       setMoneyWasted(data.money_wasted || 0);
     }
   };
 
-  const handleCheckbox = (key) => {
-    setHabits({ ...habits, [key]: !habits[key] });
+  const toggleHabit = (key) => {
+    setHabits((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
-  const handleSave = async () => {
+  const saveDay = async () => {
     setSaving(true);
 
     const { error } = await supabase
@@ -74,11 +74,8 @@ export default function Dashboard({ user }) {
 
     setSaving(false);
 
-    if (error) {
-      alert("Error saving");
-    } else {
-      alert("Day Saved");
-    }
+    if (error) alert(error.message);
+    else alert("Day Saved");
   };
 
   const stepOptions = [];
@@ -90,6 +87,7 @@ export default function Dashboard({ user }) {
     <div className="card">
       <h2>Daily Dashboard</h2>
 
+      <label>Select Date</label>
       <input
         type="date"
         value={selectedDate}
@@ -97,26 +95,33 @@ export default function Dashboard({ user }) {
       />
 
       <div style={{ marginTop: "20px" }}>
-        {Object.keys(habits).map((key) => (
-          <div key={key} className="habit-row">
+        {Object.keys(habitLabels).map((key) => (
+          <div
+            key={key}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #2a3445"
+            }}
+          >
+            <span>{habitLabels[key]}</span>
             <input
               type="checkbox"
               checked={habits[key]}
-              onChange={() => handleCheckbox(key)}
+              onChange={() => toggleHabit(key)}
+              style={{ width: "18px", height: "18px" }}
             />
-            <span>{habitLabels[key]}</span>
           </div>
         ))}
       </div>
 
-      <label>Steps</label>
-      <select
-        value={steps}
-        onChange={(e) => setSteps(Number(e.target.value))}
-      >
-        {stepOptions.map((step) => (
-          <option key={step} value={step}>
-            {step}
+      <label style={{ marginTop: "20px" }}>Steps</label>
+      <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
+        {stepOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
           </option>
         ))}
       </select>
@@ -128,16 +133,9 @@ export default function Dashboard({ user }) {
         onChange={(e) => setMoneyWasted(Number(e.target.value))}
       />
 
-      <button
-        className="primary"
-        onClick={handleSave}
-        disabled={saving}
-      >
+      <button className="primary" onClick={saveDay} disabled={saving}>
         {saving ? "Saving..." : "Save Day"}
       </button>
-      <small style={{ opacity: 0.6 }}>
-      Version 1.0 • March 2026
-    </small>
     </div>
   );
 }

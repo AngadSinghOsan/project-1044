@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../supabase";
 
-export default function Auth() {
+export default function Auth({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!username || !pin) {
@@ -11,25 +12,34 @@ export default function Auth() {
       return;
     }
 
+    setLoading(true);
+
     const { data, error } = await supabase
       .from("app_users")
       .select("*")
       .eq("username", username.toLowerCase())
       .eq("pin", pin)
-     .maybeSingle();;
+      .maybeSingle();
 
-    if (error || !data) {
+    setLoading(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (!data) {
       alert("Invalid credentials");
       return;
     }
 
     localStorage.setItem("activeUser", JSON.stringify(data));
-    window.location.reload();
+    onLogin(data);
   };
 
   return (
     <div className="card">
-      <h2>Login</h2>
+      <h2>Project 1044 Login</h2>
 
       <input
         type="text"
@@ -40,13 +50,13 @@ export default function Auth() {
 
       <input
         type="password"
-        placeholder="4 Digit PIN"
+        placeholder="PIN"
         value={pin}
         onChange={(e) => setPin(e.target.value)}
       />
 
-      <button className="primary" onClick={handleLogin}>
-        Login
+      <button className="primary" onClick={handleLogin} disabled={loading}>
+        {loading ? "Logging in..." : "Login"}
       </button>
     </div>
   );

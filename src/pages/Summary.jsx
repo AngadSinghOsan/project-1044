@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function Summary({ user }) {
-  const [dailyCount, setDailyCount] = useState(0);
-  const [totalWasted, setTotalWasted] = useState(0);
-  const [totalSaved, setTotalSaved] = useState(0);
+  const [dailyData, setDailyData] = useState([]);
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [medals, setMedals] = useState([]);
 
   useEffect(() => {
-    loadSummary();
+    loadData();
   }, []);
 
-  const loadSummary = async () => {
+  const loadData = async () => {
     const { data: daily } = await supabase
       .from("daily_entries")
       .select("*")
@@ -21,31 +21,58 @@ export default function Summary({ user }) {
       .select("*")
       .eq("user_id", user.id);
 
-    if (daily) {
-      setDailyCount(daily.length);
-      const wasted = daily.reduce(
-        (sum, d) => sum + Number(d.money_wasted || 0),
-        0
-      );
-      setTotalWasted(wasted);
-    }
+    const { data: medalData } = await supabase
+      .from("competition_results")
+      .select("*")
+      .eq("user_id", user.id);
 
-    if (weekly) {
-      const saved = weekly.reduce(
-        (sum, w) => sum + Number(w.savings || 0),
-        0
-      );
-      setTotalSaved(saved);
-    }
+    setDailyData(daily || []);
+    setWeeklyData(weekly || []);
+    setMedals(medalData || []);
   };
+
+  const totalMoneyWasted = dailyData.reduce(
+    (sum, d) => sum + (d.money_wasted || 0),
+    0
+  );
+
+  const totalMoneySaved = weeklyData.reduce(
+    (sum, w) => sum + (w.savings || 0),
+    0
+  );
+
+  const totalGymSessions = dailyData.filter(
+    d => d.habits?.gym_done
+  ).length;
+
+  const totalSteps = dailyData.reduce(
+    (sum, d) => sum + (d.steps || 0),
+    0
+  );
+
+  const avgSteps =
+    dailyData.length > 0
+      ? Math.round(totalSteps / dailyData.length)
+      : 0;
+
+  const medalCount = (type) =>
+    medals.filter(m => m.position === type).length;
 
   return (
     <div className="card">
       <h2>Summary</h2>
 
-      <p>Total Days Logged: {dailyCount}</p>
-      <p>Total Money Wasted: ₹{totalWasted}</p>
-      <p>Total Money Saved: ₹{totalSaved}</p>
+      <p><strong>Total Money Saved:</strong> ₹{totalMoneySaved}</p>
+      <p><strong>Total Money Wasted:</strong> ₹{totalMoneyWasted}</p>
+      <p><strong>Total Gym Sessions:</strong> {totalGymSessions}</p>
+      <p><strong>Average Steps:</strong> {avgSteps}</p>
+
+      <hr />
+
+      <h3>Medals</h3>
+      <p>🥇 Gold: {medalCount("gold")}</p>
+      <p>🥈 Silver: {medalCount("silver")}</p>
+      <p>🥉 Bronze: {medalCount("bronze")}</p>
     </div>
   );
 }

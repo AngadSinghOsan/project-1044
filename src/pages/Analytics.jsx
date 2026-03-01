@@ -2,77 +2,61 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function Analytics({ user }) {
-  const [dailyData, setDailyData] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [progress, setProgress] = useState(0);
+  const [gymPercent, setGymPercent] = useState(0);
+  const [monthlyGym, setMonthlyGym] = useState(0);
+  const [pr, setPr] = useState({ bench:0, squat:0, deadlift:0 });
 
-  async function loadData() {
-    try {
-      const daily = await dbRequest({
-        table: "daily_entries",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+  useEffect(()=>{ load(); },[]);
 
-      const weekly = await dbRequest({
-        table: "weekly_entries",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+  async function load() {
 
-      setDailyData(daily);
-      setWeeklyData(weekly);
+    const { data: weekly } = await supabase
+      .from("weekly_entries")
+      .select("*")
+      .eq("user_id", user.id);
 
-    } catch (err) {
-      console.error(err.message);
-    }
+    const { data: daily } = await supabase
+      .from("daily_entries")
+      .select("*")
+      .eq("user_id", user.id);
+
+    const totalSavings = weekly?.reduce((a,b)=>a+(b.savings||0),0) || 0;
+    setProgress((totalSavings / 1000000) * 100);
+
+    const gymCount = daily?.filter(d=>d.habits?.gym).length || 0;
+    setGymPercent(Math.round((gymCount / (daily?.length||1))*100));
+
+    setMonthlyGym(gymCount);
+
+    setPr({
+      bench: Math.max(...(weekly?.map(w=>w.bench)||[0])),
+      squat: Math.max(...(weekly?.map(w=>w.squat)||[0])),
+      deadlift: Math.max(...(weekly?.map(w=>w.deadlift)||[0]))
+    });
   }
-
-  // ---- 10 Lakh Progress ----
-  const totalSavings = weeklyData.reduce((sum, w) => sum + (w.savings || 0), 0);
-  const progressPercent = ((totalSavings / 1000000) * 100).toFixed(2);
-
-  // ---- Discipline Metrics ----
-  const totalDays = dailyData.length;
-  const totalGym = dailyData.filter(d => d.habits?.gym).length;
-
-  const weeklyCompletion = totalDays
-    ? ((totalGym / totalDays) * 100).toFixed(1)
-    : 0;
-
-  // ---- PR Records ----
-  const bestBench = Math.max(...weeklyData.map(w => w.bench || 0), 0);
-  const bestSquat = Math.max(...weeklyData.map(w => w.squat || 0), 0);
-  const bestDeadlift = Math.max(...weeklyData.map(w => w.deadlift || 0), 0);
 
   return (
     <div className="card">
       <h2>Analytics</h2>
 
-      {/* 10 Lakh Section */}
-      <h3>10 Lakh Goal Progress</h3>
-      <div>Total Saved: ₹{totalSavings}</div>
-      <div>Progress: {progressPercent}%</div>
+      <hr />
+      <h3>Project 1044 Progress</h3>
+      <p>{progress.toFixed(2)}% towards 10 Lakh Goal</p>
 
       <hr />
-
-      {/* Discipline Section */}
-      <h3>Discipline Metrics</h3>
-      <div>Weekly Habit Completion: {weeklyCompletion}%</div>
-      <div>Total Gym Sessions: {totalGym}</div>
+      <h3>Discipline</h3>
+      <p>Weekly Habit Completion: {gymPercent}%</p>
+      <p>Total Gym Sessions: {monthlyGym}</p>
 
       <hr />
-
-      {/* Personal Records */}
       <h3>Personal Records</h3>
-      <div>Best Bench: {bestBench} kg</div>
-      <div>Best Squat: {bestSquat} kg</div>
-      <div>Best Deadlift: {bestDeadlift} kg</div>
+      <p>Bench PR: {pr.bench}</p>
+      <p>Squat PR: {pr.squat}</p>
+      <p>Deadlift PR: {pr.deadlift}</p>
 
-      <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
+      <div style={{ marginTop:40, fontSize:12, opacity:0.6 }}>
         Version 1.0.1
       </div>
     </div>

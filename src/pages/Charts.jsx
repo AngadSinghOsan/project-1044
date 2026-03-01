@@ -1,95 +1,106 @@
 import { useEffect, useState } from "react";
-import { dbRequest } from "../supabase";
+import { supabase } from "../supabase";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from "chart.js";
 
-export default function Summary({ user }) {
-  const [dailyData, setDailyData] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
-  const [competitionData, setCompetitionData] = useState([]);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+export default function Charts({ user }) {
 
-  async function loadData() {
-    try {
-      const daily = await dbRequest({
-        table: "daily_entries",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+  const [weekly, setWeekly] = useState([]);
 
-      const weekly = await dbRequest({
-        table: "weekly_entries",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+  useEffect(() => { load(); }, []);
 
-      const comp = await dbRequest({
-        table: "competition_results",
-        method: "select",
-        filters: [{ column: "user_id", value: user.id }]
-      });
+  async function load() {
+    const { data } = await supabase
+      .from("weekly_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("week_start");
 
-      setDailyData(daily);
-      setWeeklyData(weekly);
-      setCompetitionData(comp);
-
-    } catch (err) {
-      console.error(err.message);
-    }
+    setWeekly(data || []);
   }
 
-  // ---- Calculations ----
-  const totalDays = dailyData.length;
+  const labels = weekly.map(w => w.week_start);
 
-  const totalGym = dailyData.filter(d => d.habits?.gym).length;
+  const moneyData = {
+    labels,
+    datasets: [
+      {
+        label: "Money Saved",
+        data: weekly.map(w => w.savings),
+        borderColor: "green",
+        backgroundColor: "green"
+      }
+    ]
+  };
 
-  const totalMoneySaved = weeklyData.reduce(
-    (sum, w) => sum + (w.savings || 0),
-    0
-  );
+  const weightData = {
+    labels,
+    datasets: [
+      {
+        label: "Weight",
+        data: weekly.map(w => w.weight),
+        borderColor: "blue",
+        backgroundColor: "blue"
+      }
+    ]
+  };
 
-  const totalMoneyWasted = dailyData.reduce(
-    (sum, d) => sum + (d.money_wasted || 0),
-    0
-  );
-
-  const totalSteps = dailyData.reduce(
-    (sum, d) => sum + (d.steps || 0),
-    0
-  );
-
-  const averageSteps = totalDays
-    ? Math.round(totalSteps / totalDays)
-    : 0;
-
-  const gold = competitionData.filter(c => c.position === "gold").length;
-  const silver = competitionData.filter(c => c.position === "silver").length;
-  const bronze = competitionData.filter(c => c.position === "bronze").length;
+  const strengthData = {
+    labels,
+    datasets: [
+      {
+        label: "Bench",
+        data: weekly.map(w => w.bench),
+        borderColor: "red"
+      },
+      {
+        label: "Squat",
+        data: weekly.map(w => w.squat),
+        borderColor: "purple"
+      },
+      {
+        label: "Deadlift",
+        data: weekly.map(w => w.deadlift),
+        borderColor: "orange"
+      }
+    ]
+  };
 
   return (
     <div className="card">
-      <h2>Summary</h2>
+      <h2>Charts</h2>
+
+      <h3>Money Growth</h3>
+      <Line data={moneyData} />
 
       <hr />
 
-      <h3>Performance Overview</h3>
-      <div>Total Days Logged: {totalDays}</div>
-      <div>Total Gym Sessions: {totalGym}</div>
-      <div>Average Steps: {averageSteps}</div>
+      <h3>Weight Progress</h3>
+      <Line data={weightData} />
 
       <hr />
 
-      <h3>Finance Overview</h3>
-      <div>Total Money Saved: ₹{totalMoneySaved}</div>
-      <div>Total Money Wasted: ₹{totalMoneyWasted}</div>
-
-      <hr />
-
-      <h3>Competition Medals</h3>
-      <div>🥇 Gold: {gold}</div>
-      <div>🥈 Silver: {silver}</div>
-      <div>🥉 Bronze: {bronze}</div>
+      <h3>Strength Progress</h3>
+      <Line data={strengthData} />
 
       <div style={{ marginTop: 40, fontSize: 12, opacity: 0.6 }}>
         Version 1.0.1
